@@ -8,6 +8,20 @@ jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
 
+    services:
+      mysql:
+        image: mysql:5.7
+        env:
+          MYSQL_ROOT_PASSWORD: test
+          MYSQL_DATABASE: test
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mysqladmin ping --silent"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=3
+
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -18,7 +32,25 @@ jobs:
           username: ${{ secrets.REGISTRY_USERNAME }}
           password: ${{ secrets.REGISTRY_TOKEN }}
 
+      - name: Wait for MySQL to be ready
+        run: |
+          for i in {30..0}; do
+            if mysqladmin ping -h"127.0.0.1" --silent; then
+              break
+            fi
+            echo 'MySQL is unavailable - sleeping'
+            sleep 1
+          done
+          if [ "$i" = 0 ]; then
+            echo 'MySQL did not become available in time' >&2
+            exit 1
+          fi
+
+      - name: Run database connection test
+        run: python test_db_connection.py
+
       - name: Build the Docker Image and push to Docker Hub
+        if: success()
         uses: docker/build-push-action@v6
         with:
           push: true
