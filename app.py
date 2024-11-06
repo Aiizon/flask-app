@@ -6,9 +6,9 @@ app = Flask(__name__)
 
 # Function to check database connection
 def check_db_connection():
-    db_host = os.environ.get('DB_HOST', 'localhost')
-    db_user = os.environ.get('DB_USER', 'root')
-    db_password = os.environ.get('DB_PASSWORD', '')
+    db_host = os.environ.get('DB_HOST', '127.0.0.1')
+    db_user = os.environ.get('DB_USER', 'test')
+    db_password = os.environ.get('DB_PASSWORD', 'test')
     db_name = os.environ.get('DB_NAME', 'test')
 
     try:
